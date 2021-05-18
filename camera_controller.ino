@@ -9,12 +9,12 @@
 #define CHANNEL 0
 
 // pins
-const byte pinJoy1X = 0;
-const byte pinJoy1Y = 1;
-const byte pinJoy2X = 2;
-const byte pinJoy2Y = 3;
-const byte pinKnob1 = 4;
-const byte pinKnob2 = 5;
+const byte pinJoy1X = 0;  //A0
+const byte pinJoy1Y = 1;  //A1
+const byte pinJoy2X = 2;  //A2
+const byte pinJoy2Y = 3;  //A3
+const byte pinKnob1 = 4;  //A4
+const byte pinKnob2 = 5;  //A5
 
 // controls
 const byte ctrlJoy1Left = 0;
@@ -32,6 +32,7 @@ const byte ctrlKnob2 = 9;
 int knob1LastValue;
 int knob2LastValue;
 
+// viz https://github.com/arduino-libraries/MIDIUSB/
 void controlChange(byte channel, byte control, byte value) {
   midiEventPacket_t event = {0x0B, 0xB0 | channel, control, value};
   MidiUSB.sendMIDI(event);
@@ -55,17 +56,29 @@ int analogKnob2MIDIrange(double analogVal)
   return (analogVal / 1023) * 0x7F;
 }
 
+/**
+ * @brief checks analog value on joystick X and Y axis, sends out the value converted to MIDI range 
+ * as a MIDI command if the value is not in the dead zone (510 to 520). The dead zone is located 
+ * around the joystick stable position at around 515 (theoretically should be 512 but experience 
+ * proved otherwise).
+ * @param pinX pin for X-axis joystick data
+ * @param pinY pin for Y-axis joystick data
+ * @param controlLeft controller number for X-axis movemet in one direction 
+ * @param controlRight controller number for X-axis movemet in the other direction
+ * @param controlDown controller number for Y-axis movemet in one direction 
+ * @param controlUp controller number for Y-axis movemet in the other direction
+ */
 void updateJoystick2Axis(byte pinX, byte pinY, byte controlLeft, byte controlRight, byte controlDown, byte controlUp)
 {
   int valueX = analogRead(pinX);
   int valueY = analogRead(pinY);
   
-  if(valueX < 400) //left
+  if(valueX < 510) //left
   {
     controlChange(CHANNEL, controlLeft, analogJoy2MIDIrange(valueX));
     MidiUSB.flush();
   }
-  else if (valueX > 600) //right
+  else if (valueX > 520) //right
   {
     controlChange(CHANNEL, controlRight, analogJoy2MIDIrange(valueX)); 
     MidiUSB.flush(); 
@@ -82,6 +95,10 @@ void updateJoystick2Axis(byte pinX, byte pinY, byte controlLeft, byte controlRig
   }
 }
 
+/**
+ * Checks analog value on the knob and sends its converted value as MIDI
+ * command if the value differs from the last sent value.
+ */
 void updateKnob(byte pinKnob, byte control, int & lastValue)
 {
   int value = analogRead(pinKnob);
