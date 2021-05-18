@@ -83,12 +83,12 @@ void updateJoystick2Axis(byte pinX, byte pinY, byte controlLeft, byte controlRig
     controlChange(CHANNEL, controlRight, analogJoy2MIDIrange(valueX)); 
     MidiUSB.flush(); 
   }
-  if(valueY < 400) //down
+  if(valueY < 510) //down
   {
     controlChange(CHANNEL, controlDown, analogJoy2MIDIrange(valueY));
     MidiUSB.flush();
   }
-  else if (valueY > 600) //up
+  else if (valueY > 520) //up
   {
     controlChange(CHANNEL, controlUp, analogJoy2MIDIrange(valueY));
     MidiUSB.flush();
